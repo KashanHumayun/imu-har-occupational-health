@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "imu-har-occupational-health"
+version = "0.1.0"
+description = "End-to-end IMU-based human activity recognition pipeline for occupational health use cases."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "joblib>=1.5",
+  "numpy>=2.0",
+  "pandas>=2.0",
+  "scikit-learn>=1.5",
+]
+
+[project.optional-dependencies]
+viz = ["matplotlib>=3.8"]
+neural = ["torch>=2.2"]
+
+[project.scripts]
+imu-har-demo = "imu_har.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
