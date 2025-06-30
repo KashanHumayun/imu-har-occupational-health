@@ -59,12 +59,16 @@ The optional LSTM path is included as a neural baseline, but the current short d
 - `reports/demo/window_predictions.csv` with per-window predictions for each model
 - `reports/demo/performance_overview.png` summarising model performance and class balance
 - `reports/demo/random_forest_model.joblib` for the best-performing classical baseline
+- `models/demo/random_forest_model.joblib` as a cleaner model artifact location
+- `notebooks/demo_walkthrough.ipynb` for quick inspection in Jupyter
 
 ## Project Structure
 
 - `src/imu_har/` package code for feature extraction, modeling, and CLI entry points
 - `tests/` smoke test for the demo pipeline
 - `reports/` generated metrics and prediction exports
+- `models/demo/` stored demo model artifact
+- `notebooks/demo_walkthrough.ipynb` starter analysis notebook
 - `data/` place raw UCI HAR, PAMAP2, or custom wearable data here
 - `models/` reserved for longer-lived trained artifacts
 

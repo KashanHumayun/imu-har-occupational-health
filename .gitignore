@@ -20,6 +20,9 @@ env/
 *.joblib
 *.npy
 *.npz
+!models/
+!models/**/
+!models/**/*.joblib
 
 # OS / editor
 .DS_Store
