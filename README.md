@@ -1,89 +1,57 @@
 # IMU-Based Human Activity Recognition for Occupational Health
 
-End-to-end wearable-sensor pipeline for classifying occupationally relevant activities such as walking, sitting, standing, and lifting. The repository is structured like a real applied ML project: windowed signal preprocessing, handcrafted time-series features, cross-subject evaluation, sequence smoothing, and reproducible demo outputs.
+Real-data activity-recognition pipeline built on the official UCI HAR and PAMAP2 datasets. The repository now runs against downloaded benchmark files rather than synthetic placeholders and produces saved metrics, predictions, model artifacts, and visual summaries.
 
-![HAR overview](reports/demo/performance_overview.png)
+![Real-data overview](reports/results/performance_overview.png)
 
-## Project Snapshot
+## Datasets
 
-- Focus: occupational activity recognition from IMU and accelerometer streams
-- Activities: `walking`, `sitting`, `standing`, `lifting`
-- Baselines: Random Forest, SVM, optional PyTorch LSTM
-- Sequence layer: discrete HMM-style workflow smoothing across continuous streams
-- Current demo result: `87.3%` cross-subject accuracy with Random Forest on the demo pipeline
+- UCI HAR: subject-disjoint train/test split from smartphone inertial windows
+- PAMAP2: raw continuous IMU protocol files windowed into `sitting`, `standing`, and `walking` segments for leave-one-subject-out evaluation
 
-## Why It Matters
+## Current Results
 
-Human activity recognition is often reported on curated benchmark windows, but occupational health use cases care about continuous, noisy movement data and cross-user generalisation. This repo is built around that framing:
+| Dataset | Model | Evaluation | Accuracy | Macro F1 |
+| --- | --- | --- | ---: | ---: |
+| UCI HAR | Linear SVM | Official subject-disjoint test split | 0.960 | 0.960 |
+| UCI HAR | Random Forest | Official subject-disjoint test split | 0.926 | 0.924 |
+| PAMAP2 | Random Forest | Leave-one-subject-out on raw-window features | 0.930 | 0.928 |
+| PAMAP2 | Linear SVM | Leave-one-subject-out on raw-window features | 0.889 | 0.882 |
 
-- subject-wise evaluation instead of random window splits
-- workflow-aware decoding instead of only independent predictions
-- outputs that are useful for downstream reporting and safety analysis
+## What The Pipeline Does
 
-## What This Repo Includes
+- loads the real UCI HAR feature matrices and inertial windows
+- windows raw PAMAP2 IMU streams into subject-level motion segments
+- extracts statistical and FFT-based features for raw PAMAP2 windows
+- evaluates Random Forest and SVM baselines
+- supports an optional PyTorch LSTM path for UCI HAR inertial windows
+- saves reproducible outputs to `reports/results` and `models/results`
 
-- Sliding-window segmentation of continuous IMU streams
-- Statistical and FFT-derived feature engineering
-- Cross-subject evaluation with Random Forest and SVM baselines
-- Optional PyTorch LSTM sequence classifier
-- HMM-style workflow smoothing over continuous task sequences
-- CLI entry point that writes metrics, model artifacts, and demo predictions
-
-## Quick Start
+## Run It
 
 ```bash
 python -m pip install -r requirements.txt
 python -m pip install -e .
-python -m imu_har.cli --output-dir reports/demo
+python -m imu_har.cli --output-dir reports/results --model-dir models/results
 ```
 
-Run without the neural baseline:
+Optional LSTM training:
 
 ```bash
-python -m imu_har.cli --skip-lstm
+python -m imu_har.cli --train-lstm
 ```
 
-## Demo Results
+## Output Files
 
-| Model | Evaluation setup | Accuracy | Macro F1 |
-| --- | --- | ---: | ---: |
-| Random Forest | Leave-one-subject-out | 0.873 | 0.843 |
-| SVM | Leave-one-subject-out | 0.810 | 0.777 |
-| HMM-decoded workflow output | Sequence-smoothed predictions | 0.865 | 0.836 |
+- `reports/results/metrics.json`
+- `reports/results/uci_har_predictions.csv`
+- `reports/results/pamap2_predictions.csv`
+- `reports/results/performance_overview.png`
+- `models/results/uci_har_best_model.joblib`
+- `models/results/pamap2_best_model.joblib`
+- `notebooks/real_data_walkthrough.ipynb`
 
-The optional LSTM path is included as a neural baseline, but the current short demo configuration is intentionally lightweight and underperforms the classical models. That tradeoff is visible rather than hidden, which makes the repo more honest and easier to extend.
+## Notes
 
-## Example Outputs
-
-- `reports/demo/metrics.json` with fold-wise model metrics and classification reports
-- `reports/demo/window_predictions.csv` with per-window predictions for each model
-- `reports/demo/performance_overview.png` summarising model performance and class balance
-- `reports/demo/random_forest_model.joblib` for the best-performing classical baseline
-- `models/demo/random_forest_model.joblib` as a cleaner model artifact location
-- `notebooks/demo_walkthrough.ipynb` for quick inspection in Jupyter
-
-## Project Structure
-
-- `src/imu_har/` package code for feature extraction, modeling, and CLI entry points
-- `tests/` smoke test for the demo pipeline
-- `reports/` generated metrics and prediction exports
-- `models/demo/` stored demo model artifact
-- `notebooks/demo_walkthrough.ipynb` starter analysis notebook
-- `data/` place raw UCI HAR, PAMAP2, or custom wearable data here
-- `models/` reserved for longer-lived trained artifacts
-
-## Adapting To Real Data
-
-The current demo generates structured synthetic IMU streams with subject-specific variation so the full training and evaluation loop can be exercised. To plug in real datasets:
-
-1. Replace the synthetic generator with your dataset loader.
-2. Preserve the expected columns: subject identifier, workflow identifier, timestamp, activity label, and six IMU channels.
-3. Reuse `segment_windows`, `extract_window_features`, and the evaluation utilities in `src/imu_har/pipeline.py`.
-4. Increase sequence length or tune the LSTM path if you want a stronger neural baseline.
-
-## Repo Strengths
-
-- Runnable immediately without hunting for datasets
-- Keeps modeling and evaluation code separate and reusable
-- Uses cross-subject validation, which is closer to real deployment conditions
-- Produces artifacts that are easy to show in a portfolio or discuss in interviews
+- Raw datasets are downloaded locally into `data/raw/` and intentionally ignored by git.
+- The default checked-in results come from the real downloaded datasets, not generated samples.

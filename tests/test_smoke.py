@@ -4,27 +4,28 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from imu_har.pipeline import run_demo
+from imu_har.pipeline import run_pipeline
 
 
 class HarPipelineSmokeTest(unittest.TestCase):
-    def test_demo_pipeline_creates_outputs(self) -> None:
+    def test_pipeline_creates_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             output_dir = Path(tmp_dir)
-            summary = run_demo(
+            model_dir = output_dir / "models"
+            project_root = Path(__file__).resolve().parents[1]
+            summary = run_pipeline(
+                project_root=project_root,
                 output_dir=output_dir,
-                n_subjects=4,
-                sequences_per_subject=2,
-                sequence_length=192,
-                window_size=48,
-                step_size=24,
-                lstm_epochs=1,
-                include_lstm=False,
+                model_dir=model_dir,
+                train_lstm=False,
+                pamap2_subject_limit=3,
             )
-            self.assertIn("random_forest", summary["classical_models"])
+            self.assertIn("random_forest", summary["uci_har"]["models"])
             self.assertTrue((output_dir / "metrics.json").exists())
-            self.assertTrue((output_dir / "window_predictions.csv").exists())
-            self.assertGreater(summary["best_model"]["accuracy"], 0.6)
+            self.assertTrue((output_dir / "uci_har_predictions.csv").exists())
+            self.assertTrue((output_dir / "pamap2_predictions.csv").exists())
+            self.assertGreater(summary["uci_har"]["models"]["svm"]["accuracy"], 0.85)
+            self.assertGreater(summary["pamap2"]["classical_models"]["random_forest"]["mean_accuracy"], 0.7)
 
 
 if __name__ == "__main__":
